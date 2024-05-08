@@ -1,0 +1,44 @@
+{
+    "vbox": {
+        "registryKeys": [
+            {
+                "regPath": "HARDWARE\\DEVICEMAP\\Scsi\\Scsi Port 0\\Scsi Bus 0\\Target Id 0\\Logical Unit Id 0",
+                "regKey": "Identifier",
+                "regValue": "VBOX"
+            },
+            {
+                "regPath": "HARDWARE\\DEVICEMAP\\Scsi\\Scsi Port 1\\Scsi Bus 0\\Target Id 0\\Logical Unit Id 0"
+            },
+            {
+                "regPath": "HARDWARE\\DEVICEMAP\\Scsi\\Scsi Port 2\\Scsi Bus 0\\Target Id 0\\Logical Unit Id 0"
+            },
+            {
+                "regPath": "SOFTWARE\\Oracle\\VirtualBox Guest Additions"
+            },
+            {
+                "regPath": "SYSTEM\\ControlSet001\\Services\\VBoxVideo"
+            },
+            {
+                "regPath": "SYSTEM\\ControlSet001\\Services\\VBoxSF"
+            },
+            {
+                "regPath": "SYSTEM\\ControlSet001\\Services\\VBoxService"
+            },
+            {
+                "regPath": "SYSTEM\\ControlSet001\\Services\\VBoxMouse"
+            },
+            {
+                "regPath": "SYSTEM\\ControlSet001\\Services\\VBoxGuest"
+            },
+            {
+                "regPath": "HARDWARE\\ACPI\\RSDT\\VBOX__"
+            },
+            {
+                "regPath": "HARDWARE\\ACPI\\FADT\\VBOX__"
+            },
+            {
+                "regPath": "HARDWARE\\ACPI\\DSDT\\VBOX__"
+            }
+        ]
+    }
+}
