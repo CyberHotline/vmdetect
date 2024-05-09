@@ -4,40 +4,68 @@
             {
                 "regPath": "HARDWARE\\DEVICEMAP\\Scsi\\Scsi Port 0\\Scsi Bus 0\\Target Id 0\\Logical Unit Id 0",
                 "regKey": "Identifier",
-                "regValue": "VBOX"
+                "regValue": "VBOX",
+                "hive": "HKLM"
             },
             {
-                "regPath": "HARDWARE\\DEVICEMAP\\Scsi\\Scsi Port 1\\Scsi Bus 0\\Target Id 0\\Logical Unit Id 0"
+                "regPath": "HARDWARE\\DEVICEMAP\\Scsi\\Scsi Port 1\\Scsi Bus 0\\Target Id 0\\Logical Unit Id 0",
+                "regKey": "Identifier",
+                "regValue": "VBOX",
+                "hive": "HKLM"
             },
             {
-                "regPath": "HARDWARE\\DEVICEMAP\\Scsi\\Scsi Port 2\\Scsi Bus 0\\Target Id 0\\Logical Unit Id 0"
+                "regPath": "HARDWARE\\DEVICEMAP\\Scsi\\Scsi Port 2\\Scsi Bus 0\\Target Id 0\\Logical Unit Id 0",
+                "regKey": "Identifier",
+                "regValue": "VBOX",
+                "hive": "HKLM"
             },
             {
-                "regPath": "SOFTWARE\\Oracle\\VirtualBox Guest Additions"
+                "regPath": "SOFTWARE\\Oracle\\VirtualBox Guest Additions",
+                "hive": "HKLM"
             },
             {
-                "regPath": "SYSTEM\\ControlSet001\\Services\\VBoxVideo"
+                "regPath": "HARDWARE\\Description\\System",
+                "regKey": "VideoBiosVersion",
+                "regValue": "VIRTUALBOX",
+                "hive": "HKLM"
             },
             {
-                "regPath": "SYSTEM\\ControlSet001\\Services\\VBoxSF"
+                "regPath": "HARDWARE\\Description\\System",
+                "regKey": "SystemBiosVersion",
+                "regValue": "VBOX",
+                "hive": "HKLM"
             },
             {
-                "regPath": "SYSTEM\\ControlSet001\\Services\\VBoxService"
+                "regPath": "SYSTEM\\ControlSet001\\Services\\VBoxVideo",
+                "hive": "HKLM"
             },
             {
-                "regPath": "SYSTEM\\ControlSet001\\Services\\VBoxMouse"
+                "regPath": "SYSTEM\\ControlSet001\\Services\\VBoxSF",
+                "hive": "HKLM"
             },
             {
-                "regPath": "SYSTEM\\ControlSet001\\Services\\VBoxGuest"
+                "regPath": "SYSTEM\\ControlSet001\\Services\\VBoxService",
+                "hive": "HKLM"
             },
             {
-                "regPath": "HARDWARE\\ACPI\\RSDT\\VBOX__"
+                "regPath": "SYSTEM\\ControlSet001\\Services\\VBoxMouse",
+                "hive": "HKLM"
             },
             {
-                "regPath": "HARDWARE\\ACPI\\FADT\\VBOX__"
+                "regPath": "SYSTEM\\ControlSet001\\Services\\VBoxGuest",
+                "hive": "HKLM"
             },
             {
-                "regPath": "HARDWARE\\ACPI\\DSDT\\VBOX__"
+                "regPath": "HARDWARE\\ACPI\\RSDT\\VBOX__",
+                "hive": "HKLM"
+            },
+            {
+                "regPath": "HARDWARE\\ACPI\\FADT\\VBOX__",
+                "hive": "HKLM"
+            },
+            {
+                "regPath": "HARDWARE\\ACPI\\DSDT\\VBOX__",
+                "hive": "HKLM"
             }
         ]
     }

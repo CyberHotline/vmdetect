@@ -4,7 +4,8 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"log"
+	"io"
+	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -19,6 +20,7 @@ type Data struct {
 			RegPath  string `json:"regPath"`
 			RegKey   string `json:"regKey"`
 			RegValue string `json:"regValue"`
+			Hive     string `json:"hive"`
 		} `json:"registryKeys"`
 	} `json:"vbox"`
 }
@@ -32,16 +34,27 @@ func (s *Data) LoadJson() {
 	if FileAccessible(jsonFile) {
 		f, _ := os.ReadFile(jsonFile)
 		err := json.Unmarshal(f, &s)
-		ErrCheck(err)
+		LogWriter(fmt.Sprintf("Loading Json from file \"vmdetect_data.json\" returned error: %s", err))
+	} else {
+		url := "https://github.com/CyberHotline/vmdetect/raw/main/vmdetect_data.json"
+		if DownloadFile(url) {
+			s.LoadJson()
+		}
 
 	}
 }
 
 // TODO: Implement concurrency to LogWriter and QueryReg
 // QueryReg parses important registry keys which can be used to differentiate between virtual machines and normal operating systems.
-func QueryReg(hive registry.Key, path, key, checkFor string) bool {
+func QueryReg(hive, path, key, checkFor string) bool {
+	hives := map[string]registry.Key{
+		"HKLM": registry.LOCAL_MACHINE,
+		"HKCU": registry.CURRENT_USER,
+		"HKU":  registry.USERS,
+		"HKCC": registry.CURRENT_CONFIG,
+	}
 	// Openning the key
-	k, err := registry.OpenKey(hive, path, registry.QUERY_VALUE)
+	k, err := registry.OpenKey(hives[hive], path, registry.QUERY_VALUE)
 	if err != nil {
 		LogWriter(fmt.Sprintf("OpenKey from Key: %s returned error: %s", key, err))
 		return false
@@ -49,14 +62,19 @@ func QueryReg(hive registry.Key, path, key, checkFor string) bool {
 	defer k.Close()
 
 	// Getting the value
-	v, _, err := k.GetStringValue(key)
-	if err != nil {
-		LogWriter(fmt.Sprintf("GetStringValue from Key: %s returned error: %s", key, err))
-		return false
-	}
-	if strings.Contains(v, checkFor) {
-		LogWriter(fmt.Sprintf("Key: %s With Value: %s", key, v))
+	if key == "" && checkFor == "" {
+		LogWriter(fmt.Sprintf("Found Key: %s", key))
 		return true
+	} else {
+		v, _, err := k.GetStringValue(key)
+		if err != nil {
+			LogWriter(fmt.Sprintf("GetStringValue from Key: %s returned error: %s", key, err))
+			return false
+		}
+		if strings.Contains(v, checkFor) {
+			LogWriter(fmt.Sprintf("Key: %s With Value: %s", key, v))
+			return true
+		}
 	}
 	return false
 }
@@ -65,7 +83,7 @@ func QueryReg(hive registry.Key, path, key, checkFor string) bool {
 func LogWriter(value string) {
 	logFile := "./vmdetect_log.txt"
 	f, _ := os.OpenFile(logFile, os.O_APPEND|os.O_CREATE, 0600)
-
+	defer f.Close()
 	now := time.Now()
 
 	w := bufio.NewWriter(f)
@@ -85,13 +103,30 @@ func FileAccessible(path string) bool {
 	}
 }
 
-// func DownloadFile(url, path string) bool {
+func DownloadFile(url string) bool {
+	f, err := os.Create("vmdetect_data.json")
+	if err != nil {
+		LogWriter(fmt.Sprintf("Error while downloading json file, %s", err))
+	}
+	defer f.Close()
+	resp, err := http.Get(url)
+	if err != nil || resp.StatusCode != http.StatusOK {
 
-// }
+		LogWriter("Unable to access remote resource. Terminating")
+		os.Exit(1)
+	}
+	defer resp.Body.Close()
+	_, err = io.Copy(f, resp.Body)
+	if err != nil {
+		LogWriter("Unable to create downloaded file locally. Terminating")
+		os.Exit(1)
+	}
+	return true
+}
 
 // ErrCheck just checks if an error is not nil, in which case it logs the error to stdout.
-func ErrCheck(err error) {
-	if err != nil {
-		log.Println(err)
-	}
-}
+// func ErrCheck(err error) {
+// 	if err != nil {
+// 		LogWriter(fmt.Sprint(err))
+// 	}
+// }
