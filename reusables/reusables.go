@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/shirou/gopsutil/v3/process"
 	"golang.org/x/sys/windows/registry"
 )
 
@@ -22,7 +23,8 @@ type Data struct {
 			RegValue string `json:"regValue"`
 			Hive     string `json:"hive"`
 		} `json:"registryKeys"`
-		Files []string `json:"files"`
+		Files     []string `json:"files"`
+		Processes []string `json:"processes"`
 	} `json:"vbox"`
 }
 
@@ -80,6 +82,17 @@ func QueryReg(hive, path, key, checkFor string) bool {
 		}
 		if strings.Contains(string(buf), checkFor) {
 			LogWriter(fmt.Sprintf("Key: %s With Value: %s", key, string(buf)))
+			return true
+		}
+	}
+	return false
+}
+
+func ProcessEnum(service string) bool {
+	processes, _ := process.Processes()
+	for _, process := range processes {
+		if name, _ := process.Name(); service == strings.ToLower(name) {
+			LogWriter(fmt.Sprintf("Found Process: %s", name))
 			return true
 		}
 	}
