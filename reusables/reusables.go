@@ -22,6 +22,7 @@ type Data struct {
 			RegValue string `json:"regValue"`
 			Hive     string `json:"hive"`
 		} `json:"registryKeys"`
+		Files []string `json:"files"`
 	} `json:"vbox"`
 }
 
@@ -34,10 +35,13 @@ func (s *Data) LoadJson() {
 	if FileAccessible(jsonFile) {
 		f, _ := os.ReadFile(jsonFile)
 		err := json.Unmarshal(f, &s)
-		LogWriter(fmt.Sprintf("Loading Json from file \"vmdetect_data.json\" returned error: %s", err))
+		if err != nil {
+			LogWriter(fmt.Sprintf("Loading Json from file \"vmdetect_data.json\" returned error: %s", err))
+		}
 	} else {
 		url := "https://github.com/CyberHotline/vmdetect/raw/main/vmdetect_data.json"
-		if DownloadFile(url) {
+		name := "vmdetect_data.json"
+		if DownloadFile(url, name) {
 			s.LoadJson()
 		}
 
@@ -45,6 +49,7 @@ func (s *Data) LoadJson() {
 }
 
 // TODO: Implement concurrency to LogWriter and QueryReg
+// TODO: Add support for multiple registry data types
 // QueryReg parses important registry keys which can be used to differentiate between virtual machines and normal operating systems.
 func QueryReg(hive, path, key, checkFor string) bool {
 	hives := map[string]registry.Key{
@@ -56,23 +61,25 @@ func QueryReg(hive, path, key, checkFor string) bool {
 	// Openning the key
 	k, err := registry.OpenKey(hives[hive], path, registry.QUERY_VALUE)
 	if err != nil {
-		LogWriter(fmt.Sprintf("OpenKey from Key: %s returned error: %s", key, err))
+		LogWriter(fmt.Sprintf("OpenKey Path: %s returned error: %s", path, err))
 		return false
 	}
 	defer k.Close()
 
 	// Getting the value
 	if key == "" && checkFor == "" {
-		LogWriter(fmt.Sprintf("Found Key: %s", key))
+		LogWriter(fmt.Sprintf("Found Path: %s", path))
 		return true
 	} else {
-		v, _, err := k.GetStringValue(key)
+		var buf []byte
+		_, _, err := k.GetValue(key, buf)
+
 		if err != nil {
-			LogWriter(fmt.Sprintf("GetStringValue from Key: %s returned error: %s", key, err))
+			LogWriter(fmt.Sprintf("GetValue from Key: %s returned error: %s", key, err))
 			return false
 		}
-		if strings.Contains(v, checkFor) {
-			LogWriter(fmt.Sprintf("Key: %s With Value: %s", key, v))
+		if strings.Contains(string(buf), checkFor) {
+			LogWriter(fmt.Sprintf("Key: %s With Value: %s", key, string(buf)))
 			return true
 		}
 	}
@@ -87,7 +94,7 @@ func LogWriter(value string) {
 	now := time.Now()
 
 	w := bufio.NewWriter(f)
-	w.WriteString(fmt.Sprintf("%s - %s \n", now.Format("02/01/2005 15:04:05 MST"), value))
+	w.WriteString(fmt.Sprintf("%s - %s \n", now.Format("02/01/2006 15:04:05 MST"), value))
 	w.Flush()
 	time.Sleep(time.Second)
 }
@@ -103,8 +110,10 @@ func FileAccessible(path string) bool {
 	}
 }
 
-func DownloadFile(url string) bool {
-	f, err := os.Create("vmdetect_data.json")
+// DownloadFile downloads a file to the current working directory. Used to donwload the "vmdetect_data.json" file when it is not available locally
+func DownloadFile(url, name string) bool {
+	go LogWriter(fmt.Sprintf("Downlaoding Remote File from resource: %s", url))
+	f, err := os.Create(name)
 	if err != nil {
 		LogWriter(fmt.Sprintf("Error while downloading json file, %s", err))
 	}
