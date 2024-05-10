@@ -11,4 +11,7 @@ func IsVbox() {
 	for _, c := range re.S.Vbox.RegistryKeys {
 		fmt.Println(re.QueryReg(c.Hive, c.RegPath, c.RegKey, c.RegValue))
 	}
+	for _, c := range re.S.Vbox.Files {
+		fmt.Println(re.FileAccessible(c))
+	}
 }
