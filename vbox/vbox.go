@@ -31,4 +31,7 @@ func IsVbox() {
 	for _, c := range re.S.Vbox.Processes {
 		re.ProcessEnum(c)
 	}
+	for _, c := range re.S.Vbox.Services {
+		re.ServiceEnum(c)
+	}
 }
