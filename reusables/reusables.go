@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/shirou/gopsutil/v3/process"
+	"github.com/shirou/gopsutil/v3/winservices"
 	"golang.org/x/sys/windows/registry"
 )
 
@@ -42,6 +43,7 @@ type Data struct {
 		} `json:"registryKeys"`
 		Files     []string `json:"files"`
 		Processes []string `json:"processes"`
+		Services  []string `json:"services"`
 	} `json:"vbox"`
 }
 
@@ -105,11 +107,27 @@ func QueryReg(hive, path, key, checkFor string) bool {
 	return false
 }
 
-func ProcessEnum(service string) bool {
+// ProcessEnum enumerates the processes on the system to check if a process relating to a VM exists
+func ProcessEnum(proc string) bool {
 	processes, _ := process.Processes()
 	for _, process := range processes {
-		if name, _ := process.Name(); service == strings.ToLower(name) {
+		if name, _ := process.Name(); proc == strings.ToLower(name) {
 			LogWriter(fmt.Sprintf("Found Process: %s", name))
+			return true
+		}
+	}
+	return false
+}
+
+// ServiceEnum enumerates the services on the sytem to check if a service relating to a VM exists
+func ServiceEnum(serv string) bool {
+	services, err := winservices.ListServices()
+	if err != nil {
+		LogWriter(fmt.Sprintf("ListServices returned error: %s", err))
+	}
+	for _, c := range services {
+		if c.Name == serv {
+			LogWriter(fmt.Sprintf("Found Service: %s", c.Name))
 			return true
 		}
 	}

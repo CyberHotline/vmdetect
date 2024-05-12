@@ -74,6 +74,7 @@
 
         ],
         "files": [ "C:\\Windows\\System32\\VBoxControl.exe", "C:\\Windows\\System32\\drivers\\VBoxMouse.sys", "C:\\Windows\\System32\\drivers\\VBoxGuest.sys", "C:\\Windows\\System32\\drivers\\VBoxSF.sys", "C:\\Windows\\System32\\drivers\\VBoxVideo.sys", "C:\\Windows\\System32\\vboxdisp.dll", "C:\\Windows\\System32\\vboxhook.dll", "C:\\Windows\\System32\\vboxmrxnp.dll", "C:\\Windows\\System32\\vboxogl.dll", "C:\\Windows\\System32\\vboxoglarrayspu.dll", "C:\\Windows\\System32\\vboxoglcrutil.dll", "C:\\Windows\\System32\\vboxoglerrorspu.dll", "C:\\Windows\\System32\\vboxoglfeedbackspu.dll", "C:\\Windows\\System32\\vboxoglpackspu.dll", "C:\\Windows\\System32\\vboxoglpassthroughspu.dll", "C:\\Program Files\\Oracle\\Virtualbox Guest Additions\\VBoxTray.exe" ],
-        "processes": [ "vboxservice.exe", "vboxtray.exe", "vboxcontrol.exe" ]
+        "processes": [ "vboxservice.exe", "vboxtray.exe", "vboxcontrol.exe" ],
+        "services": [ "VBoxService" ]
     }
 }

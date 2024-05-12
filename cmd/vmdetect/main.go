@@ -1,3 +1,15 @@
+package main
+
+import (
+	re "github.com/mohabgabber/vmdetect/reusables"
+	"github.com/mohabgabber/vmdetect/vbox"
+)
+
+func main() {
+	re.S.LoadJson()
+	vbox.IsVbox()
+}
+
 /*
 VMDetect, a go script to discover virtual environments
 Copyright (C) 2024  CyberHotline - Mohab Gabber
@@ -15,14 +27,3 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package main
-
-import (
-	re "github.com/mohabgabber/vmdetect/reusables"
-	"github.com/mohabgabber/vmdetect/vbox"
-)
-
-func main() {
-	re.S.LoadJson()
-	vbox.IsVbox()
-}
