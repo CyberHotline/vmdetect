@@ -45,6 +45,17 @@ type Data struct {
 		Processes []string `json:"processes"`
 		Services  []string `json:"services"`
 	} `json:"vbox"`
+	Vmware struct {
+		RegistryKeys []struct {
+			RegPath  string `json:"regPath"`
+			RegKey   string `json:"regKey"`
+			RegValue string `json:"regValue"`
+			Hive     string `json:"hive"`
+		} `json:"registryKeys"`
+		Files     []string `json:"files"`
+		Processes []string `json:"processes"`
+		Services  []string `json:"services"`
+	} `json:"vmware"`
 }
 
 // * This instance of Data will contain data from the "data.json" file.
@@ -69,10 +80,13 @@ func (s *Data) LoadJson() {
 	}
 }
 
-// TODO: Implement concurrency to LogWriter and QueryReg
-// TODO: Add support for multiple registry data types
+// Counts the number of checks the program will perform
+func (s Data) CountChecks() int {
+	return (len(S.Vbox.RegistryKeys) + len(S.Vbox.Files) + len(S.Vbox.Processes) + len(S.Vbox.Services) + len(S.Vmware.RegistryKeys) + len(S.Vmware.Files) + len(S.Vmware.Processes) + len(S.Vmware.Services))
+}
+
 // QueryReg parses important registry keys which can be used to differentiate between virtual machines and normal operating systems.
-func QueryReg(hive, path, key, checkFor string) bool {
+func QueryReg(hive, path, key, checkFor string, c chan bool) bool {
 	hives := map[string]registry.Key{
 		"HKLM": registry.LOCAL_MACHINE,
 		"HKCU": registry.CURRENT_USER,
@@ -160,7 +174,7 @@ func FileAccessible(path string) bool {
 
 // DownloadFile downloads a file to the current working directory. Used to donwload the "vmdetect_data.json" file when it is not available locally
 func DownloadFile(url, name string) bool {
-	go LogWriter(fmt.Sprintf("Downlaoding Remote File from resource: %s", url))
+	LogWriter(fmt.Sprintf("Downlaoding Remote File from resource: %s", url))
 	f, err := os.Create(name)
 	if err != nil {
 		LogWriter(fmt.Sprintf("Error while downloading json file, %s", err))

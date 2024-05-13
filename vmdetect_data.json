@@ -76,5 +76,36 @@
         "files": [ "C:\\Windows\\System32\\VBoxControl.exe", "C:\\Windows\\System32\\drivers\\VBoxMouse.sys", "C:\\Windows\\System32\\drivers\\VBoxGuest.sys", "C:\\Windows\\System32\\drivers\\VBoxSF.sys", "C:\\Windows\\System32\\drivers\\VBoxVideo.sys", "C:\\Windows\\System32\\vboxdisp.dll", "C:\\Windows\\System32\\vboxhook.dll", "C:\\Windows\\System32\\vboxmrxnp.dll", "C:\\Windows\\System32\\vboxogl.dll", "C:\\Windows\\System32\\vboxoglarrayspu.dll", "C:\\Windows\\System32\\vboxoglcrutil.dll", "C:\\Windows\\System32\\vboxoglerrorspu.dll", "C:\\Windows\\System32\\vboxoglfeedbackspu.dll", "C:\\Windows\\System32\\vboxoglpackspu.dll", "C:\\Windows\\System32\\vboxoglpassthroughspu.dll", "C:\\Program Files\\Oracle\\Virtualbox Guest Additions\\VBoxTray.exe" ],
         "processes": [ "vboxservice.exe", "vboxtray.exe", "vboxcontrol.exe" ],
         "services": [ "VBoxService" ]
-    }
+    },
+    "vmware": {
+        "registryKeys": [
+            {
+                "regPath": "Software\\VMware, Inc.",
+                "hive": "HKCU"
+            },
+            {
+                "regPath": "SOFTWARE\\VMware, Inc.",
+                "hive": "HKLM"
+            },
+            {
+                "regPath": "HARDWARE\\DEVICEMAP\\Scsi\\Scsi Port 0\\Scsi Bus 0\\Target Id 0\\Logical Unit Id 0",
+                "regKey": "Identifier",
+                "regValue": "VMware",
+                "hive": "HKLM"
+            },
+            {
+                "regPath": "SOFTWARE\\VMware, Inc.\\VMware Tools",
+                "hive": "HKLM"
+            },
+            {
+                "regPath": "HARDWARE\\Description\\System",
+                "regKey": "SystemBiosVersion",
+                "regValue": "VMWARE",
+                "hive": "HKLM"
+            }
+        ]
+    },
+    "files": [ "C:\\Windows\\System32\\drivers\\vmhgfs.sys", "C:\\Windows\\System32\\drivers\\vmmemctl.sys", "C:\\Windows\\System32\\drivers\\vmmouse.sys", "C:\\Windows\\System32\\drivers\\vmrawdsk.sys" ],
+    "processes": [ "VGAuthService.exe", "vmacthlp.exe", "vmtoolsd.exe" ],
+    "services": [ "VMware Physical Disk Helper Service", "VGAuthService", "vmvss", "VMTools" ]
 }
