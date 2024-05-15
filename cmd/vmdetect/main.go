@@ -1,13 +1,11 @@
 package main
 
 import (
-	"github.com/mohabgabber/vmdetect/detection"
-	re "github.com/mohabgabber/vmdetect/reusables"
+	de "github.com/mohabgabber/vmdetect/detection"
 )
 
 func main() {
-	re.S.LoadJson()
-	detection.IsVM()
+	de.IsVM()
 }
 
 /*

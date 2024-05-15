@@ -103,9 +103,9 @@
                 "regValue": "VMWARE",
                 "hive": "HKLM"
             }
-        ]
-    },
-    "files": [ "C:\\Windows\\System32\\drivers\\vmhgfs.sys", "C:\\Windows\\System32\\drivers\\vmmemctl.sys", "C:\\Windows\\System32\\drivers\\vmmouse.sys", "C:\\Windows\\System32\\drivers\\vmrawdsk.sys" ],
-    "processes": [ "VGAuthService.exe", "vmacthlp.exe", "vmtoolsd.exe" ],
-    "services": [ "VMware Physical Disk Helper Service", "VGAuthService", "vmvss", "VMTools" ]
+        ],
+        "files": [ "C:\\Windows\\System32\\drivers\\vmhgfs.sys", "C:\\Windows\\System32\\drivers\\vmmemctl.sys", "C:\\Windows\\System32\\drivers\\vmmouse.sys", "C:\\Windows\\System32\\drivers\\vmrawdsk.sys" ],
+        "processes": [ "VGAuthService.exe", "vmacthlp.exe", "vmtoolsd.exe" ],
+        "services": [ "VMware Physical Disk Helper Service", "VGAuthService", "vmvss", "VMTools" ]
+    }
 }

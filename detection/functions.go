@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package reusables
+package detection
 
 import (
 	"bufio"
@@ -58,35 +58,37 @@ type Data struct {
 	} `json:"vmware"`
 }
 
-// * This instance of Data will contain data from the "data.json" file.
+// * This instance of Data will contain data from the "vmdetect_data.json" file.
 var S Data
 
 // LoadJson will load the file "vmdetect_data.json" into the S instance.
 func (s *Data) LoadJson() {
 	jsonFile := "vmdetect_data.json"
-	if FileAccessible(jsonFile) {
+	url := "https://github.com/CyberHotline/vmdetect/raw/main/vmdetect_data.json"
+	if getJsonData(jsonFile, url) {
 		f, _ := os.ReadFile(jsonFile)
 		err := json.Unmarshal(f, &s)
 		if err != nil {
 			LogWriter(fmt.Sprintf("Loading Json from file \"vmdetect_data.json\" returned error: %s", err))
 		}
 	} else {
-		url := "https://github.com/CyberHotline/vmdetect/raw/main/vmdetect_data.json"
-		name := "vmdetect_data.json"
-		if DownloadFile(url, name) {
-			s.LoadJson()
-		}
-
+		LogWriter("Unable to access or download \"vmdetect_data.json\" file, please download it manually and place it in the current working directory.")
+		os.Exit(1)
 	}
 }
 
-// Counts the number of checks the program will perform
-func (s Data) CountChecks() int {
-	return (len(S.Vbox.RegistryKeys) + len(S.Vbox.Files) + len(S.Vbox.Processes) + len(S.Vbox.Services) + len(S.Vmware.RegistryKeys) + len(S.Vmware.Files) + len(S.Vmware.Processes) + len(S.Vmware.Services))
+// countChecks returns the number of checks the program will perform for each VM type. Vbox, Vmware, Hyberv
+func (s Data) countChecks() (int, int, int) {
+	vbox := (len(S.Vbox.RegistryKeys) + len(S.Vbox.Files) + len(S.Vbox.Processes) + len(S.Vbox.Services))
+	vmware := (len(S.Vmware.RegistryKeys) + len(S.Vmware.Files) + len(S.Vmware.Processes) + len(S.Vmware.Services))
+	return vbox, vmware, 1
 }
 
+//* Main Functions
+
 // QueryReg parses important registry keys which can be used to differentiate between virtual machines and normal operating systems.
-func QueryReg(hive, path, key, checkFor string, c chan bool) bool {
+func QueryReg(hive, path, key, checkFor string, m chan bool) {
+	defer G.Done()
 	hives := map[string]registry.Key{
 		"HKLM": registry.LOCAL_MACHINE,
 		"HKCU": registry.CURRENT_USER,
@@ -97,44 +99,49 @@ func QueryReg(hive, path, key, checkFor string, c chan bool) bool {
 	k, err := registry.OpenKey(hives[hive], path, registry.QUERY_VALUE)
 	if err != nil {
 		LogWriter(fmt.Sprintf("OpenKey Path: %s returned error: %s", path, err))
-		return false
+		m <- false
+		return
 	}
 	defer k.Close()
 
 	// Getting the value
 	if key == "" && checkFor == "" {
 		LogWriter(fmt.Sprintf("Found Path: %s", path))
-		return true
+		m <- true
+		return
 	} else {
 		var buf []byte
 		_, _, err := k.GetValue(key, buf)
 
 		if err != nil {
 			LogWriter(fmt.Sprintf("GetValue from Key: %s returned error: %s", key, err))
-			return false
+			m <- false
+			return
 		}
 		if strings.Contains(string(buf), checkFor) {
-			LogWriter(fmt.Sprintf("Key: %s With Value: %s", key, string(buf)))
-			return true
+			LogWriter(fmt.Sprintf("Found Key: %s With Value: %s", key, string(buf)))
+			m <- true
+			return
 		}
 	}
-	return false
 }
 
 // ProcessEnum enumerates the processes on the system to check if a process relating to a VM exists
-func ProcessEnum(proc string) bool {
+func ProcessEnum(proc string, m chan bool) {
+	defer G.Done()
 	processes, _ := process.Processes()
 	for _, process := range processes {
 		if name, _ := process.Name(); proc == strings.ToLower(name) {
 			LogWriter(fmt.Sprintf("Found Process: %s", name))
-			return true
+			m <- true
+			return
 		}
 	}
-	return false
 }
 
 // ServiceEnum enumerates the services on the sytem to check if a service relating to a VM exists
-func ServiceEnum(serv string) bool {
+func ServiceEnum(serv string, m chan bool) {
+	defer G.Done()
 	services, err := winservices.ListServices()
 	if err != nil {
 		LogWriter(fmt.Sprintf("ListServices returned error: %s", err))
@@ -142,11 +149,27 @@ func ServiceEnum(serv string) bool {
 	for _, c := range services {
 		if c.Name == serv {
 			LogWriter(fmt.Sprintf("Found Service: %s", c.Name))
-			return true
+			m <- true
+			return
 		}
 	}
-	return false
 }
+
+// FileAccessible is used to check if a file is accessible or not. mainly utilized to check if the "vmdetect_data.json" exists or not, and to see if VM related files exist.
+func FileAccessible(path string, m chan bool) {
+	defer G.Done()
+	if _, err := os.Stat(path); err == nil {
+		LogWriter(fmt.Sprintf("Accessing File: %s Returned: Successful", path))
+		m <- true
+		return
+	} else {
+		LogWriter(fmt.Sprintf("Accessing File: %s Returned: %s", path, err))
+		m <- false
+		return
+	}
+}
+
+//* Helper Functions
 
 // LogWriter creates & appends all retrieved data to a file named vmdetect_log.txt in the current working directory.
 func LogWriter(value string) {
@@ -161,43 +184,32 @@ func LogWriter(value string) {
 	time.Sleep(time.Second)
 }
 
-// FileAccessible is used to check if a file is accessible or not. mostly utilized to check if the "vmdetect_data.json" exists or not.
-func FileAccessible(path string) bool {
+// getJsonData checks if the "vmdetect_data.json" exists, if not downloads it to the current working directory.
+func getJsonData(path, url string) bool {
 	if _, err := os.Stat(path); err == nil {
-		LogWriter(fmt.Sprintf("Accessing File: %s Returned: Successful", path))
+		LogWriter(fmt.Sprintf("Accessing Json File: %s Returned: Successful", path))
 		return true
 	} else {
-		LogWriter(fmt.Sprintf("Accessing File: %s Returned: %s", path, err))
-		return false
+		LogWriter(fmt.Sprintf("Accessing Json File: %s Returned: %s", path, err))
+
+		LogWriter(fmt.Sprintf("Downlaoding Remote File from resource: %s", url))
+		f, err := os.Create(path)
+		if err != nil {
+			LogWriter(fmt.Sprintf("Error while downloading json file, %s", err))
+		}
+		defer f.Close()
+		resp, err := http.Get(url)
+		if err != nil || resp.StatusCode != http.StatusOK {
+
+			LogWriter("Unable to access remote resource. Terminating")
+			os.Exit(1)
+		}
+		defer resp.Body.Close()
+		_, err = io.Copy(f, resp.Body)
+		if err != nil {
+			LogWriter("Unable to create downloaded file locally. Terminating")
+			os.Exit(1)
+		}
+		return true
 	}
 }
-
-// DownloadFile downloads a file to the current working directory. Used to donwload the "vmdetect_data.json" file when it is not available locally
-func DownloadFile(url, name string) bool {
-	LogWriter(fmt.Sprintf("Downlaoding Remote File from resource: %s", url))
-	f, err := os.Create(name)
-	if err != nil {
-		LogWriter(fmt.Sprintf("Error while downloading json file, %s", err))
-	}
-	defer f.Close()
-	resp, err := http.Get(url)
-	if err != nil || resp.StatusCode != http.StatusOK {
-
-		LogWriter("Unable to access remote resource. Terminating")
-		os.Exit(1)
-	}
-	defer resp.Body.Close()
-	_, err = io.Copy(f, resp.Body)
-	if err != nil {
-		LogWriter("Unable to create downloaded file locally. Terminating")
-		os.Exit(1)
-	}
-	return true
-}
-
-// ErrCheck just checks if an error is not nil, in which case it logs the error to stdout.
-// func ErrCheck(err error) {
-// 	if err != nil {
-// 		LogWriter(fmt.Sprint(err))
-// 	}
-// }

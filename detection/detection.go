@@ -18,34 +18,93 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 package detection
 
 import (
+	"fmt"
 	"sync"
-
-	re "github.com/mohabgabber/vmdetect/reusables"
 )
 
 // The wait group is used to make sure execution does not end before all routines have finished executing
 var G sync.WaitGroup
 
-// C is a buffered channel that will receive the results of the various checks performed against the machine
-var C = make(chan bool, 100)
+// buffered channels that will receive the results of the various checks performed against the machine
+var VB = make(chan bool, 100)
+var VM = make(chan bool, 100)
+var HV = make(chan bool, 100)
 
 var IsVbox bool
 var IsVmware bool
 var IsHyberv bool
 
-func IsVM() bool {
-	for _, c := range re.S.Vbox.RegistryKeys {
-		re.QueryReg(c.Hive, c.RegPath, c.RegKey, c.RegValue, C)
+func IsVM() {
+	// Loading json data into the S instance
+	S.LoadJson()
+
+	// Starting Check
+	VboxCheck()
+	VmwareCheck()
+
+	// Number of operations
+	vbno, vmno, hvno := S.countChecks()
+	var (
+		vbco int
+		vmco int
+		hvco int
+	)
+	G.Wait()
+	close(VB)
+	close(VM)
+	close(HV)
+
+	for i := range VB {
+		if i {
+			vbco++
+		}
 	}
-	for _, c := range re.S.Vbox.Files {
-		re.FileAccessible(c)
+	for i := range VM {
+		if i {
+			vmco++
+		}
 	}
-	for _, c := range re.S.Vbox.Processes {
-		re.ProcessEnum(c)
+	for i := range HV {
+		if i {
+			hvco++
+		}
 	}
-	for _, c := range re.S.Vbox.Services {
-		re.ServiceEnum(c)
-	}
-	return true
+	fmt.Printf("Results:\n%d of %d\tsuccessful virtualbox checks\n%d of %d\tsuccessful vmware checks\n%d of %d\t successful hyberv checks", vbco, vbno, vmco, vmno, hvco, hvno)
 }
-func VboxCheck()
+func VboxCheck() {
+	for _, c := range S.Vbox.Files {
+		G.Add(1)
+		FileAccessible(c, VB)
+	}
+	for _, c := range S.Vbox.Processes {
+		G.Add(1)
+		ProcessEnum(c, VB)
+	}
+	for _, c := range S.Vbox.Services {
+		G.Add(1)
+		ServiceEnum(c, VB)
+	}
+	for _, c := range S.Vbox.RegistryKeys {
+		G.Add(1)
+		QueryReg(c.Hive, c.RegPath, c.RegKey, c.RegValue, VB)
+	}
+}
+
+func VmwareCheck() {
+	for _, c := range S.Vmware.Files {
+		G.Add(1)
+		FileAccessible(c, VM)
+	}
+	for _, c := range S.Vmware.Processes {
+		G.Add(1)
+		ProcessEnum(c, VM)
+	}
+	for _, c := range S.Vmware.Services {
+		G.Add(1)
+		ServiceEnum(c, VM)
+	}
+	for _, c := range S.Vmware.RegistryKeys {
+		G.Add(1)
+		QueryReg(c.Hive, c.RegPath, c.RegKey, c.RegValue, VM)
+	}
+}
