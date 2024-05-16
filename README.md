@@ -1,6 +1,30 @@
 # VMDetect
+VM detect is a go library that tries to decide whether it is running inside a virtual machine.
 
-A go script that uses multiple methods to detect if it is running inside a virtual machine or not.
+Malware analysts can use this if they want to check if malware can detect their virtual environment or not.
+
+## Features
+- Checks for the existence of registry keys created by VM platforms
+- Checks for applications/files created by VM platforms
+- Checks running processes for known VM processes
+- Checks registered services on the device for known VM services
+- Extendible -> All the checks that are performed, are stored in the [vmdetect_data.json](https://github.com/CyberHotline/vmdetect/blob/main/vmdetect_data.json) if you want to add new artifacts to check for, it is as simple as editing the JSON file
+- Automatic -> All you have to do is run the executable, it will download the latest JSON file available, and log all findings in the current working directory
+- Uses the power of go routines
+- Checks suspicious user desktop for lack of files (COMING SOON)
+- Checks the CPUID and other hardware artifacts (COMING SOON)
+- Checks running processes for analysis tools that might indicate a virtual environment (COMING SOON)
+
+## Platform Support
+VMDetect currently only supports the following platforms:
+  - VirtualBox
+  - VMware
+With support for more platforms coming soon!
+
+## Contributions
+To contribute, fork the repository, and submit a pull request.
+
+All contributions are welcome!
 
 ## License
 ```
