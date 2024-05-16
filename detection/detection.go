@@ -26,10 +26,10 @@ import (
 var G sync.WaitGroup
 
 // buffered channels that will receive the results of the various checks performed against the machine
-var VB = make(chan bool, 100)
-var VM = make(chan bool, 100)
-var HV = make(chan bool, 100)
+var VB = make(chan bool, 100) // VirtualBox
+var VM = make(chan bool, 100) // VMware
 
+// IsVM the function that starts the checks
 func IsVM() {
 	// Loading json data into the S instance
 	S.LoadJson()
@@ -42,10 +42,11 @@ func IsVM() {
 		G.Wait()
 		close(VB)
 		close(VM)
-		close(HV)
 	}()
 	enumResults()
 }
+
+// VboxCheck starts the check for virtualbox artefacts. Uses for loops with go routines.
 func VboxCheck() {
 	for _, c := range S.Vbox.Files {
 		G.Add(1)
@@ -63,8 +64,13 @@ func VboxCheck() {
 		G.Add(1)
 		go QueryReg(c.Hive, c.RegPath, c.RegKey, c.RegValue, VB)
 	}
+	for _, c := range S.Vbox.Mac {
+		G.Add(1)
+		go CheckMacAddr(c, VB)
+	}
 }
 
+// VmwareCheck runs the check for vmware artefacts. Uses for loops with go routines.
 func VmwareCheck() {
 	for _, c := range S.Vmware.Files {
 		G.Add(1)
@@ -82,14 +88,18 @@ func VmwareCheck() {
 		G.Add(1)
 		go QueryReg(c.Hive, c.RegPath, c.RegKey, c.RegValue, VM)
 	}
+	for _, c := range S.Vmware.Mac {
+		G.Add(1)
+		go CheckMacAddr(c, VM)
+	}
 }
 
+// enumResults counts all successful checks and prints the final verdict.
 func enumResults() {
-	vbno, vmno, hvno := S.countChecks()
+	vbno, vmno := S.countChecks()
 	var (
 		vbco int
 		vmco int
-		hvco int
 	)
 	for i := range VB {
 		if i {
@@ -101,23 +111,17 @@ func enumResults() {
 			vmco++
 		}
 	}
-	for i := range HV {
-		if i {
-			hvco++
-		}
-	}
-	LogWriter(fmt.Sprintf("Results:\n%d of %d\tsuccessful virtualbox checks\n%d of %d\tsuccessful vmware checks\n%d of %d\t successful hyberv checks", vbco, vbno, vmco, vmno, hvco, hvno))
+	LogWriter(fmt.Sprintf("Results:\n%d of %d\tsuccessful virtualbox checks\n%d of %d\tsuccessful vmware checks", vbco, vbno, vmco, vmno))
 	if float64(vbco) >= (30.0/100.0)*float64(vbno) {
 		verdictPrint("VM - VirtualBox")
 	} else if float64(vmco) >= (30.0/100.0)*float64(vmno) {
 		verdictPrint("VM - VMware")
-	} else if float64(hvco) >= (30.0/100.0)*float64(hvno) {
-		verdictPrint("VM - Hyper-V")
 	} else {
 		verdictPrint("Not VM")
 	}
 }
 
+// verdictPrint Prints the final verdict on the machine, "VM - VirtualBox", "VM - VMware", or "Not VM".
 func verdictPrint(text string) {
 	LogWriter(fmt.Sprintf("Verdict: %s", text))
 	fmt.Printf("Verdict: %s", text)
