@@ -19,7 +19,25 @@ Malware analysts can use this if they want to check if malware can detect their 
 VMDetect currently only supports the following platforms:
   - VirtualBox
   - VMware
+
 With support for more platforms coming soon!
+
+## How to use
+You can either use the executable found in the "Releases" tab on Github. Or use `go get` to install it and use it within your project
+```bash
+go get github.com/cyberhotline/vmdetect@latest
+go mod tidy
+```
+The import it into your project, and use the `detection.IsVM()` function, which will take care of everything else
+```go
+package main
+
+import "github.com/cyberhotline/vmdetect/detection"
+
+func main() {
+  detection.IsVM()
+}
+```
 
 ## Contributions
 To contribute, fork the repository, and submit a pull request.
