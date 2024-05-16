@@ -1,7 +1,7 @@
 package main
 
 import (
-	de "github.com/mohabgabber/vmdetect/detection"
+	de "github.com/cyberhotline/vmdetect/detection"
 )
 
 func main() {
