@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -44,6 +45,7 @@ type Data struct {
 		Files     []string `json:"files"`
 		Processes []string `json:"processes"`
 		Services  []string `json:"services"`
+		Mac       []string `json:"mac"`
 	} `json:"vbox"`
 	Vmware struct {
 		RegistryKeys []struct {
@@ -55,6 +57,7 @@ type Data struct {
 		Files     []string `json:"files"`
 		Processes []string `json:"processes"`
 		Services  []string `json:"services"`
+		Mac       []string `json:"mac"`
 	} `json:"vmware"`
 }
 
@@ -77,11 +80,11 @@ func (s *Data) LoadJson() {
 	}
 }
 
-// countChecks returns the number of checks the program will perform for each VM type. Vbox, Vmware, Hyberv
-func (s Data) countChecks() (int, int, int) {
+// countChecks returns the number of checks the program will perform for each VM type. Vbox, Vmware
+func (s Data) countChecks() (int, int) {
 	vbox := (len(S.Vbox.RegistryKeys) + len(S.Vbox.Files) + len(S.Vbox.Processes) + len(S.Vbox.Services))
 	vmware := (len(S.Vmware.RegistryKeys) + len(S.Vmware.Files) + len(S.Vmware.Processes) + len(S.Vmware.Services))
-	return vbox, vmware, 1
+	return vbox, vmware
 }
 
 //* Main Functions
@@ -106,7 +109,7 @@ func QueryReg(hive, path, key, checkFor string, m chan bool) {
 
 	// Getting the value
 	if key == "" && checkFor == "" {
-		LogWriter(fmt.Sprintf("Found Path: %s", path))
+		LogWriter(fmt.Sprintf("Found Registry Path: %s", path))
 		m <- true
 		return
 	} else {
@@ -126,20 +129,20 @@ func QueryReg(hive, path, key, checkFor string, m chan bool) {
 	}
 }
 
-// ProcessEnum enumerates the processes on the system to check if a process relating to a VM exists
+// ProcessEnum enumerates the processes on the system to check if a process relating to a VM exists.
 func ProcessEnum(proc string, m chan bool) {
 	defer G.Done()
 	processes, _ := process.Processes()
 	for _, process := range processes {
 		if name, _ := process.Name(); proc == strings.ToLower(name) {
-			LogWriter(fmt.Sprintf("Found Process: %s", name))
+			LogWriter(fmt.Sprintf("Found Process: %s", proc))
 			m <- true
 			return
 		}
 	}
 }
 
-// ServiceEnum enumerates the services on the sytem to check if a service relating to a VM exists
+// ServiceEnum enumerates the services on the sytem to check if a service relating to a VM exists.
 func ServiceEnum(serv string, m chan bool) {
 	defer G.Done()
 	services, err := winservices.ListServices()
@@ -167,6 +170,27 @@ func FileAccessible(path string, m chan bool) {
 		m <- false
 		return
 	}
+}
+
+// CheckMacAddr compares network interfaces on the device against a known set of default mac addresses used by VM platforms.
+func CheckMacAddr(addr string, m chan bool) {
+	defer G.Done()
+	ifs, err := net.Interfaces()
+	if err != nil {
+		LogWriter(fmt.Sprintf("Accessing Network Interfaces returned error: %s", err))
+		m <- false
+		return
+	}
+	for _, c := range ifs {
+		if c.HardwareAddr.String() != "" {
+			if strings.ToLower(strings.TrimSpace(c.HardwareAddr.String()[0:8])) == addr {
+				LogWriter(fmt.Sprintf("Found interface with mac address: %s", addr))
+				m <- true
+				return
+			}
+		}
+	}
+	m <- false
 }
 
 //* Helper Functions
