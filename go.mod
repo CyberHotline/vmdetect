@@ -1,4 +1,4 @@
-module github.com/mohabgabber/vmdetect
+module github.com/cyberhotline/vmdetect
 
 go 1.22.2
 
