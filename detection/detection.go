@@ -28,20 +28,33 @@ var G sync.WaitGroup
 // buffered channels that will receive the results of the various checks performed against the machine
 var VB = make(chan bool, 100) // VirtualBox
 var VM = make(chan bool, 100) // VMware
+var AN = make(chan bool, 100) // Analyst
 
 // IsVM the function that starts the checks
-func IsVM() {
+func IsVM(vbcheck, vmcheck, ancheck, all bool) {
 	// Loading json data into the S instance
 	S.LoadJson()
 
 	// Start Check
-	VboxCheck()
-	VmwareCheck()
-
+	if vbcheck {
+		VboxCheck()
+	}
+	if vmcheck {
+		VmwareCheck()
+	}
+	if ancheck {
+		AnalystCheck()
+	}
+	if all {
+		VboxCheck()
+		VmwareCheck()
+		AnalystCheck()
+	}
 	go func() {
 		G.Wait()
 		close(VB)
 		close(VM)
+		close(AN)
 	}()
 	enumResults()
 }
@@ -94,12 +107,36 @@ func VmwareCheck() {
 	}
 }
 
+func AnalystCheck() {
+	for _, c := range S.Analyst.Files {
+		G.Add(1)
+		go FileAccessible(c, AN)
+	}
+	for _, c := range S.Analyst.Processes {
+		G.Add(1)
+		go ProcessEnum(c, AN)
+	}
+	for _, c := range S.Analyst.Services {
+		G.Add(1)
+		go ServiceEnum(c, AN)
+	}
+	for _, c := range S.Analyst.RegistryKeys {
+		G.Add(1)
+		go QueryReg(c.Hive, c.RegPath, c.RegKey, c.RegValue, AN)
+	}
+	for _, c := range S.Analyst.Mac {
+		G.Add(1)
+		go CheckMacAddr(c, AN)
+	}
+}
+
 // enumResults counts all successful checks and prints the final verdict.
 func enumResults() {
-	vbno, vmno := S.countChecks()
+	vbno, vmno, anno := S.countChecks()
 	var (
 		vbco int
 		vmco int
+		anco int
 	)
 	for i := range VB {
 		if i {
@@ -111,14 +148,27 @@ func enumResults() {
 			vmco++
 		}
 	}
-	LogWriter(fmt.Sprintf("Results:\n%d of %d\tsuccessful virtualbox checks\n%d of %d\tsuccessful vmware checks", vbco, vbno, vmco, vmno))
-	if float64(vbco) >= (30.0/100.0)*float64(vbno) {
+	for i := range AN {
+		if i {
+			anco++
+		}
+	}
+	LogWriter(fmt.Sprintf("Results:\n%d of %d\tsuccessful virtualbox checks\n%d of %d\tsuccessful vmware checks\n%d of %d\tsuccessful analyst environment checks", vbco, vbno, vmco, vmno, anco, anno))
+	if calculateScore(vbco, vbno, 30) {
 		verdictPrint("VM - VirtualBox")
-	} else if float64(vmco) >= (30.0/100.0)*float64(vmno) {
+	} else if calculateScore(vmco, vmno, 30) {
 		verdictPrint("VM - VMware")
 	} else {
 		verdictPrint("Not VM")
 	}
+	if calculateScore(anco, anno, 20) {
+		verdictPrint("Sandbox - Analysis Tools Detected")
+	}
+}
+
+// calculateScore calculates if the checks of a specific kind are more than 30% successful
+func calculateScore(success, total, percentage int) bool {
+	return float64(success) >= (float64(percentage)/100.0)*float64(total)
 }
 
 // verdictPrint Prints the final verdict on the machine, "VM - VirtualBox", "VM - VMware", or "Not VM".
