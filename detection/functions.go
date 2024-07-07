@@ -59,6 +59,18 @@ type Data struct {
 		Services  []string `json:"services"`
 		Mac       []string `json:"mac"`
 	} `json:"vmware"`
+	Analyst struct {
+		RegistryKeys []struct {
+			RegPath  string `json:"regPath"`
+			RegKey   string `json:"regKey"`
+			RegValue string `json:"regValue"`
+			Hive     string `json:"hive"`
+		} `json:"registryKeys"`
+		Files     []string `json:"files"`
+		Processes []string `json:"processes"`
+		Services  []string `json:"services"`
+		Mac       []string `json:"mac"`
+	} `json:"analyst"`
 }
 
 // * This instance of Data will contain data from the "vmdetect_data.json" file.
@@ -81,10 +93,11 @@ func (s *Data) LoadJson() {
 }
 
 // countChecks returns the number of checks the program will perform for each VM type. Vbox, Vmware
-func (s Data) countChecks() (int, int) {
-	vbox := (len(S.Vbox.RegistryKeys) + len(S.Vbox.Files) + len(S.Vbox.Processes) + len(S.Vbox.Services))
-	vmware := (len(S.Vmware.RegistryKeys) + len(S.Vmware.Files) + len(S.Vmware.Processes) + len(S.Vmware.Services))
-	return vbox, vmware
+func (s Data) countChecks() (int, int, int) {
+	vbox := (len(S.Vbox.RegistryKeys) + len(S.Vbox.Files) + len(S.Vbox.Processes) + len(S.Vbox.Services) + len(S.Vbox.Mac))
+	vmware := (len(S.Vmware.RegistryKeys) + len(S.Vmware.Files) + len(S.Vmware.Processes) + len(S.Vmware.Services) + len(S.Vmware.Mac))
+	analyst := (len(S.Analyst.RegistryKeys) + len(S.Analyst.Files) + len(S.Analyst.Processes) + len(S.Analyst.Services) + len(S.Analyst.Mac))
+	return vbox, vmware, analyst
 }
 
 //* Main Functions
@@ -97,6 +110,7 @@ func QueryReg(hive, path, key, checkFor string, m chan bool) {
 		"HKCU": registry.CURRENT_USER,
 		"HKU":  registry.USERS,
 		"HKCC": registry.CURRENT_CONFIG,
+		"HKCR": registry.CLASSES_ROOT,
 	}
 	// Openning the key
 	k, err := registry.OpenKey(hives[hive], path, registry.QUERY_VALUE)

@@ -106,8 +106,17 @@
             }
         ],
         "files": [ "C:\\Windows\\System32\\drivers\\vmhgfs.sys", "C:\\Windows\\System32\\drivers\\vmmemctl.sys", "C:\\Windows\\System32\\drivers\\vmmouse.sys", "C:\\Windows\\System32\\drivers\\vmrawdsk.sys" ],
-        "processes": [ "VGAuthService.exe", "vmacthlp.exe", "vmtoolsd.exe", "Vmwaretrat.exe", "Vmwareuser.exe" ],
+        "processes": [ "VGAuthService.exe", "vm3dservice.exe", "vmacthlp.exe", "vmtoolsd.exe", "Vmwaretrat.exe", "Vmwareuser.exe" ],
         "services": [ "VMware Physical Disk Helper Service", "VGAuthService", "vmvss", "VMTools" ],
         "mac": [ "00:0c:29", "00:1c:14", "00:50:56", "00:05:69" ]
+    },
+    "analyst": {
+        "registryKeys": [
+            {
+                "regPath": "*\\shell\\die",
+                "hive": "HKCR"
+            }
+        ],
+        "processes": [ "Procmon64.exe", "Procmon.exe", "ida64.exe", "fakenet.exe", "pestudio.exe", "HxD.exe", "Wireshark.exe", "010Editor.exe", "dumpcap.exe", "x64dbg.exe", "x32dbg.exe", "procexp64.exe", "CodeTrack.exe", "procexp.exe", "ILSpy.exe", "CFF Explorer.exe", "DbgX.Shell.exe", "Autoruns.exe", "RegCool.exe", "pe-sieve.exe", "PE-bear.exe", "WinDump.exe", "DiskView.exe", "DiskView64.exe", "procdot.exe", "Regshot-x64-Unicode.exe" ]
     }
 }

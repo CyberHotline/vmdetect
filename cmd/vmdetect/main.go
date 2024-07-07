@@ -1,11 +1,24 @@
 package main
 
 import (
+	"flag"
+
 	de "github.com/cyberhotline/vmdetect/detection"
 )
 
 func main() {
-	de.IsVM()
+	var (
+		vbcheck bool
+		vmcheck bool
+		ancheck bool
+		all     bool
+	)
+	flag.BoolVar(&vbcheck, "vbchk", false, "Check VirtualBox Artifacts")
+	flag.BoolVar(&vmcheck, "vmchk", false, "Check VMware Artifacts")
+	flag.BoolVar(&ancheck, "anchk", false, "Check For Analysis Tools and Artifacts")
+	flag.BoolVar(&all, "all", false, "Perform All Available Checks")
+	flag.Parse()
+	de.IsVM(vbcheck, vmcheck, ancheck, all)
 }
 
 /*
